@@ -72,9 +72,10 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	@Nullable
 	protected Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
-
+		//s 会排序
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
 		if (advisors.isEmpty()) {
+			//s DO_NOT_PROXY = null
 			return DO_NOT_PROXY;
 		}
 		return advisors.toArray();
@@ -91,10 +92,15 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+		//s 获取所有的增强器
+		// AnnotationAwareAspectJAutoProxyCreator：AnnotationAwareAspectJAutoProxyCreator.findCandidateAdvisors
+		// 其他：AbstractAdvisorAutoProxyCreator.findCandidateAdvisors
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
+		//s 获取适用于bean的增强
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {
+			//s 对 Advisor 排序 注解里的advice 会排顺序 afterReturning after around before
 			eligibleAdvisors = sortAdvisors(eligibleAdvisors);
 		}
 		return eligibleAdvisors;
@@ -123,6 +129,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 
 		ProxyCreationContext.setCurrentProxiedBeanName(beanName);
 		try {
+			//s 过滤符合条件的
 			return AopUtils.findAdvisorsThatCanApply(candidateAdvisors, beanClass);
 		}
 		finally {

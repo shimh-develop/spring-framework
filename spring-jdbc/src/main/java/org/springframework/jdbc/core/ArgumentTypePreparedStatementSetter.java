@@ -59,8 +59,10 @@ public class ArgumentTypePreparedStatementSetter implements PreparedStatementSet
 	public void setValues(PreparedStatement ps) throws SQLException {
 		int parameterPosition = 1;
 		if (this.args != null && this.argTypes != null) {
+			//s 循环参数 new String[]{"ssss"}
 			for (int i = 0; i < this.args.length; i++) {
 				Object arg = this.args[i];
+				//s 集合
 				if (arg instanceof Collection && this.argTypes[i] != Types.ARRAY) {
 					Collection<?> entries = (Collection<?>) arg;
 					for (Object entry : entries) {

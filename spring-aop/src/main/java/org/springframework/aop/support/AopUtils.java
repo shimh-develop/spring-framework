@@ -222,11 +222,13 @@ public abstract class AopUtils {
 	 */
 	public static boolean canApply(Pointcut pc, Class<?> targetClass, boolean hasIntroductions) {
 		Assert.notNull(pc, "Pointcut must not be null");
+		//s 事务的 pc: TransactionAttributeSourcePointcut 匹配所有类
 		if (!pc.getClassFilter().matches(targetClass)) {
 			return false;
 		}
-
+		//s TransactionAttributeSourcePointcut 返回的是自己 this
 		MethodMatcher methodMatcher = pc.getMethodMatcher();
+		//s 匹配所有方法的话 直接返回 不用挨个遍历了
 		if (methodMatcher == MethodMatcher.TRUE) {
 			// No need to iterate the methods if we're matching any method anyway...
 			return true;
@@ -239,13 +241,18 @@ public abstract class AopUtils {
 
 		Set<Class<?>> classes = new LinkedHashSet<>();
 		if (!Proxy.isProxyClass(targetClass)) {
+			//s 对应的类 如果是cglib代理的话 返回父类
 			classes.add(ClassUtils.getUserClass(targetClass));
 		}
+		//s 类的所有接口
 		classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
 
 		for (Class<?> clazz : classes) {
+			//s 所有方法
 			Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);
 			for (Method method : methods) {
+				//s 事务：
+				// @see org.springframework.transaction.interceptor.TransactionAttributeSourcePointcut.matches
 				if (introductionAwareMethodMatcher != null ?
 						introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions) :
 						methodMatcher.matches(method, targetClass)) {
@@ -283,8 +290,9 @@ public abstract class AopUtils {
 		if (advisor instanceof IntroductionAdvisor) {
 			return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
 		}
-		else if (advisor instanceof PointcutAdvisor) {
+		else if (advisor instanceof PointcutAdvisor) { //s 事务注册 BeanFactoryTransactionAttributeSourceAdvisor 为 PointcutAdvisor的子类
 			PointcutAdvisor pca = (PointcutAdvisor) advisor;
+			//s 是否符合条件
 			return canApply(pca.getPointcut(), targetClass, hasIntroductions);
 		}
 		else {
@@ -307,6 +315,7 @@ public abstract class AopUtils {
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
 		for (Advisor candidate : candidateAdvisors) {
+			//s 引介增强
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
@@ -317,6 +326,7 @@ public abstract class AopUtils {
 				// already processed
 				continue;
 			}
+			//s 普通增强 是否匹配
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

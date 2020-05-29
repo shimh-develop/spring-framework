@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="student" class="ioc.Student" p:name="shimh" p:age="27">
+		<constructor-arg index="0" value="shimh1"></constructor-arg>
+		<constructor-arg index="1" ref="dog"></constructor-arg>
+	</bean>
+
+	<bean id="dog" class="ioc.Dog" p:name="tom" p:age="4"/>
+
+</beans>

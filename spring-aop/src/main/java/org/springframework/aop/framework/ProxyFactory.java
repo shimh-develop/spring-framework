@@ -107,6 +107,11 @@ public class ProxyFactory extends ProxyCreatorSupport {
 	 * @return the proxy object
 	 */
 	public Object getProxy(@Nullable ClassLoader classLoader) {
+		//s createAopProxy 根据条件选择 Jdk代理还是cglib代理
+		//s 默认情况下 使用Jdk代理 没有实现接口，强制使用cglib代理
+		//s 设置proxy-target-class = true 或 optimize = true 并且 targetClass 不设置接口时 使用cglib代理
+		//s org.springframework.aop.framework.JdkDynamicAopProxy.JdkDynamicAopProxy
+		//s org.springframework.aop.framework.ObjenesisCglibAopProxy
 		return createAopProxy().getProxy(classLoader);
 	}
 

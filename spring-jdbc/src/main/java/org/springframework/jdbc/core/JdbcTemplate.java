@@ -366,13 +366,15 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 	@Nullable
 	public <T> T execute(StatementCallback<T> action) throws DataAccessException {
 		Assert.notNull(action, "Callback object must not be null");
-
+		//s 获取 java.sql.Connection
 		Connection con = DataSourceUtils.getConnection(obtainDataSource());
 		Statement stmt = null;
 		try {
 			stmt = con.createStatement();
+			//s fetch size, max rows, and query timeout
 			applyStatementSettings(stmt);
 			T result = action.doInStatement(stmt);
+			//s 处理警告
 			handleWarnings(stmt);
 			return result;
 		}
@@ -382,8 +384,10 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 			String sql = getSql(action);
 			JdbcUtils.closeStatement(stmt);
 			stmt = null;
+			//s 释放连接
 			DataSourceUtils.releaseConnection(con, getDataSource());
 			con = null;
+			//s 转换为 Spring 自己的异常体系
 			throw translateException("StatementCallback", sql, ex);
 		}
 		finally {
@@ -430,6 +434,7 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 				ResultSet rs = null;
 				try {
 					rs = stmt.executeQuery(sql);
+					//s 遍历ResultSet 调用 传进来的 callback
 					return rse.extractData(rs);
 				}
 				finally {
@@ -494,7 +499,7 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Executing SQL update [" + sql + "]");
 		}
-
+		//s 配置callback
 		class UpdateStatementCallback implements StatementCallback<Integer>, SqlProvider {
 			@Override
 			public Integer doInStatement(Statement stmt) throws SQLException {
@@ -595,11 +600,12 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 			String sql = getSql(psc);
 			logger.debug("Executing prepared SQL statement" + (sql != null ? " [" + sql + "]" : ""));
 		}
-
+		//s 获取 java.sql.Connection
 		Connection con = DataSourceUtils.getConnection(obtainDataSource());
 		PreparedStatement ps = null;
 		try {
 			ps = psc.createPreparedStatement(con);
+			//s 设置 fetch size, max rows, and query timeout
 			applyStatementSettings(ps);
 			T result = action.doInPreparedStatement(ps);
 			handleWarnings(ps);
@@ -846,8 +852,10 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 
 		logger.debug("Executing prepared SQL update");
 
+		//s ps 为 java.sql.PreparedStatement
 		return updateCount(execute(psc, ps -> {
 			try {
+				//s 设置全部参数
 				if (pss != null) {
 					pss.setValues(ps);
 				}
@@ -906,6 +914,7 @@ public class JdbcTemplate extends JdbcAccessor implements JdbcOperations {
 
 	@Override
 	public int update(String sql, Object[] args, int[] argTypes) throws DataAccessException {
+		//s ArgumentTypePreparedStatementSetter 封装参数和类型
 		return update(sql, newArgTypePreparedStatementSetter(args, argTypes));
 	}
 

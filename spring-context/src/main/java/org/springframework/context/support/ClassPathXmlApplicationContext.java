@@ -82,6 +82,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	 * @throws BeansException if context creation failed
 	 */
 	public ClassPathXmlApplicationContext(String configLocation) throws BeansException {
+		//s PathMatchingResourcePatternResolver支持Ant风格的路径解析
 		this(new String[] {configLocation}, true, null);
 	}
 
@@ -137,8 +138,9 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	public ClassPathXmlApplicationContext(
 			String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
 			throws BeansException {
-
+		//s 1.设置 PathMatchingResourcePatternResolver 2.设置parent 并合并parent的 Environment
 		super(parent);
+		//s 配置文件路径
 		setConfigLocations(configLocations);
 		if (refresh) {
 			refresh();
