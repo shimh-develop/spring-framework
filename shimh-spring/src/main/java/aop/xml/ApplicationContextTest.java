@@ -2,6 +2,8 @@ package aop.xml;
 
 import aop.Student;
 import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
+import org.springframework.aop.aspectj.autoproxy.AspectJAwareAdvisorAutoProxyCreator;
+import org.springframework.aop.config.AopNamespaceHandler;
 import org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -13,7 +15,20 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class ApplicationContextTest {
 
 	public static void main(String[] args) {
+
 		/**
+		 *
+		 * AopNamespaceHandler 解析xml中的aop标签
+		 * @see AopNamespaceHandler
+		 *
+		 * xml：
+		 * @see AspectJAwareAdvisorAutoProxyCreator
+		 *
+		 * 使用了Aspect注解
+		 *
+		 * @see AnnotationAwareAspectJAutoProxyCreator
+		 *
+		 *
 		 * 1、<aop:aspectj-autoproxy/> 或 @EnableAspectJAutoProxy 会注册 AnnotationAwareAspectJAutoProxyCreator
 		 * 	@see AnnotationAwareAspectJAutoProxyCreator
 		 *
@@ -33,7 +48,7 @@ public class ApplicationContextTest {
 		 * 对advisor排序 对@After @Before 等排序
 		 * @see org.springframework.aop.framework.autoproxy.AbstractAdvisorAutoProxyCreator#findEligibleAdvisors(java.lang.Class, java.lang.String)
 		 *
-		 *  afterReturning
+		 *   源码中增强的顺序： AfterThrowing AfterReturning After Around Before
 		 */
 
 		ApplicationContext context =

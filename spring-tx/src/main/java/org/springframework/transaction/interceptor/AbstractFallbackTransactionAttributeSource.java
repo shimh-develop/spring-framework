@@ -109,7 +109,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 		}
 		else {
 			// We need to work it out.
-			//s 加载事务信息
+			//s 解析方法、类、接口方法、接口类是父存在@Transactionl 注解 创建 RuleBasedTransactionAttribute
 			TransactionAttribute txAttr = computeTransactionAttribute(method, targetClass);
 			// Put it in the cache.
 			if (txAttr == null) {
@@ -157,18 +157,19 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 
 		// The method may be on an interface, but we need attributes from the target class.
 		// If the target class is null, the method will be unchanged.
-		//s method 代表接口 中的方法 specificMethod 表实现类中的方法
+		//s method 代表接口中的方法 specificMethod 表实现类中的方法
 		Method specificMethod = AopUtils.getMostSpecificMethod(method, targetClass);
 
 		// First try is the method in the target class.
-		//s 是否存在事务声明 org.springframework.transaction.annotation.AnnotationTransactionAttributeSource.findTransactionAttribute(java.lang.reflect.Method)
+		//s 实现类的方法中是否存在事务声明 org.springframework.transaction.annotation.AnnotationTransactionAttributeSource.findTransactionAttribute(java.lang.reflect.Method)
+		//s 解析@Transactional 注解 创建 RuleBasedTransactionAttribute
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
 		if (txAttr != null) {
 			return txAttr;
 		}
 
 		// Second try is the transaction attribute on the target class.
-		//s 方法所在类中是否存在事务声明
+		//s 查看方法所在类中是否存在事务声明
 		txAttr = findTransactionAttribute(specificMethod.getDeclaringClass());
 		if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 			return txAttr;

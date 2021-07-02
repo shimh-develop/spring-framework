@@ -155,6 +155,10 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 	@Override
 	@Nullable
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		/**
+		 *AOP使用jdk代理的具体逻辑实现
+		 */
+
 		Object oldProxy = null;
 		boolean setProxyContext = false;
 
@@ -182,6 +186,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 
 			Object retVal;
 
+			//s <aop:aspectj-autoproxy expose-proxy="true"/>
 			if (this.advised.exposeProxy) {
 				// Make invocation available if necessary.
 				//s 有时候目标对象内部的自我调用将无法实施切面中的增强则需要通过此属性暴露代理
@@ -196,7 +201,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			Class<?> targetClass = (target != null ? target.getClass() : null);
 
 			// Get the interception chain for this method.
-			//s 获取当前方法的拦截器链
+			//s 获取当前方法的拦截器链链
 			List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
 
 			// Check whether we have any advice. If we don't, we can fallback on direct

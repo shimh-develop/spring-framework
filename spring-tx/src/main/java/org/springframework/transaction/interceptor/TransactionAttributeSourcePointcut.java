@@ -40,6 +40,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 		}
 		TransactionAttributeSource tas = getTransactionAttributeSource();
 		//s 事务 tas 为 AnnotationTransactionAttributeSource
+		//s 解析方法、类、接口方法、接口类是父存在@Transactionl 注解 创建 RuleBasedTransactionAttribute
 		return (tas == null || tas.getTransactionAttribute(method, targetClass) != null);
 	}
 

@@ -147,6 +147,16 @@ public class BeanDefinitionReaderUtils {
 
 		// Register bean definition under primary name.
 		String beanName = definitionHolder.getBeanName();
+		/**
+		 * registry其实就是DefaultListableBeanFactory对象，registerBeanDefinition方法主要就干了这么两件事:
+		 *
+		 * @Override
+		 * public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+		 *     this.beanDefinitionMap.put(beanName, beanDefinition);
+		 *     this.beanDefinitionNames.add(beanName);
+		 * }
+		 * 一个是Map，另一个是List，一目了然。registerAlias方法的实现在其父类SimpleAliasRegistry，就是把键值对放在了一个ConcurrentHashMap里。
+		 */
 		registry.registerBeanDefinition(beanName, definitionHolder.getBeanDefinition());
 
 		// Register aliases for bean name, if any.

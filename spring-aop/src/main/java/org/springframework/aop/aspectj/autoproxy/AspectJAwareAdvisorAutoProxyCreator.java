@@ -98,6 +98,22 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 		// TODO: Consider optimization by caching the list of the aspect names
+		/**
+		 *
+		 *其实就是我们通过aop:aspect标签配置的切面，即:
+		 *
+		 * <bean id="aopAdvice" class="base.aop.AopDemoAdvice" />
+		 * <aop:config>
+		 *     <aop:aspect ref="aopAdvice">
+		 *     </aop:aspect>
+		 * </aop:config>
+		 * 里的aopAdvice。
+		 *
+		 * 从前面的aop:aspect一节中可以知道，Spring对于aop:config的解析其实是把aop:before/after等标签解析成为了AspectJPointcutAdvisor类型的BeanDefinition，而aopAdvice以AbstractAspectJAdvice的类型保存在其中。
+		 *
+		 * 所以可以得出结论: Spring跳过的是适用于当前bean的Advisor的Advice/Aspect对象
+		 *
+		 */
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		for (Advisor advisor : candidateAdvisors) {
 			if (advisor instanceof AspectJPointcutAdvisor &&

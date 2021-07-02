@@ -268,10 +268,11 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 				}
 				txObject.setConnectionHolder(new ConnectionHolder(newCon), true);
 			}
-
+			//s 设置synchronizedWithTransaction 事务同步标识
 			txObject.getConnectionHolder().setSynchronizedWithTransaction(true);
+
 			con = txObject.getConnectionHolder().getConnection();
-			//s 设置超时和隔离级别 Connection
+			//s 为当前Connection设置readOnly和隔离级别
 			Integer previousIsolationLevel = DataSourceUtils.prepareConnectionForTransaction(con, definition);
 			txObject.setPreviousIsolationLevel(previousIsolationLevel);
 
@@ -284,21 +285,24 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 				if (logger.isDebugEnabled()) {
 					logger.debug("Switching JDBC Connection [" + con + "] to manual commit");
 				}
+				//s 这里相当于开启事务
 				con.setAutoCommit(false);
 			}
 
 			//s 如果是只读事务
 			prepareTransactionalConnection(con, definition);
-			//s 设置判断当前线程是否存在事务的依据
+
+			//s 设置判断当前线程是否存在事务的依据  transactionActive 设置事务为活动状态
 			txObject.getConnectionHolder().setTransactionActive(true);
 
 			int timeout = determineTimeout(definition);
 			if (timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
+				//s 设置timeout
 				txObject.getConnectionHolder().setTimeoutInSeconds(timeout);
 			}
 
 			// Bind the connection holder to the thread.
-			//s 将当前 Connection 绑定到当前线程
+			//s 将当前 connectionHolder【Connection】 绑定到当前线程
 			if (txObject.isNewConnectionHolder()) {
 				TransactionSynchronizationManager.bindResource(obtainDataSource(), txObject.getConnectionHolder());
 			}

@@ -433,7 +433,7 @@ public class BeanDefinitionParserDelegate {
 		if (containingBean == null) {
 			checkNameUniqueness(beanName, aliases, ele);
 		}
-
+		//s 解析 配置bean元素 class id、等属性
 		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);
 		if (beanDefinition != null) {
 			if (!StringUtils.hasText(beanName)) {
@@ -512,17 +512,105 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		try {
+			//s 解析 class parent
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
-
+			//s 之后是解析bean的其它属性，其实就是读取其配置，调用相应的setter方法保存在BeanDefinition中  scope、lazy-init、depend-on、abstract等
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+			/**
+			 * <bean id="b" name="one, two" class="base.SimpleBean">
+			 *     <description>SimpleBean</description>
+			 * </bean>
+			 */
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
 			parseMetaElements(ele, bd);
+			/**
+			 * lookup-method解析：
+			 *
+			 * 此标签的作用在于当一个bean的某个方法被设置为lookup-method后，每次调用此方法时，都会返回一个新的指定bean的对象。用法示例:
+			 *
+			 * <bean id="apple" class="cn.com.willchen.test.di.Apple" scope="prototype"/>
+			 *
+			 * <bean id="fruitPlate" class="cn.com.willchen.test.di.FruitPlate">
+			 *     <lookup-method name="getFruit" bean="apple"/>
+			 * </bean>
+			 * 数据保存在Set中，对应的类是MethodOverrides
+			 *
+			 *
+			 */
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
+			/**
+			 * replace-mothod解析:
+			 *
+			 * 此标签用于替换bean里面的特定的方法实现，替换者必须实现Spring的MethodReplacer接口，有点像aop的意思。
+			 *
+			 * 配置文件示例:
+			 *
+			 * <bean name="replacer" class="springroad.deomo.chap4.MethodReplace" />
+			 * <bean name="testBean" class="springroad.deomo.chap4.LookupMethodBean">
+			 *     <replaced-method name="test" replacer="replacer">
+			 *         <arg-type match="String" />
+			 *     </replaced-method>
+			 * </bean>
+			 * arg-type的作用是指定替换方法的参数类型，因为接口的定义参数都是Object的。参考: SPRING.NET 1.3.2 学习20--方法注入之替换方法注入
+			 *
+			 * 解析之后将数据放在ReplaceOverride对象中，里面有一个LinkedList专门用于保存arg-type。
+			 *
+			 */
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
-
+			/**
+			 * 构造参数(constructor-arg)解析:
+			 *
+			 * 作用一目了然，使用示例:
+			 *
+			 * <bean class="base.SimpleBean">
+			 *     <constructor-arg>
+			 *         <value type="java.lang.String">Cat</value>
+			 *     </constructor-arg>
+			 * </bean>
+			 * type一般不需要指定，除了泛型集合那种。除此之外，constructor-arg还支持name, index, ref等属性，可以具体的指定参数的位置等。构造参数解析后保存在BeanDefinition内部一个ConstructorArgumentValues对象中。如果设置了index属性，那么以Map<Integer, ValueHolder>的形式保存，反之，以List的形式保存
+			 */
 			parseConstructorArgElements(ele, bd);
+			/**
+			 * property解析:
+			 *
+			 * 非常常用的标签，用以为bean的属性赋值，支持value和ref两种形式，示例:
+			 *
+			 * <bean class="base.SimpleBean">
+			 *     <property name="name" value="skywalker" />
+			 * </bean>
+			 * value和ref属性不能同时出现，如果是ref，那么将其值保存在不可变的RuntimeBeanReference对象中，其实现了BeanReference接口，此接口只有一个getBeanName方法。如果是value，那么将其值保存在TypedStringValue对象中。最终将对象保存在BeanDefinition内部一个MutablePropertyValues对象中(内部以ArrayList实现)。
+			 */
 			parsePropertyElements(ele, bd);
+
+			/**
+			 * qualifier解析:
+			 *
+			 * 配置示例:
+			 *
+			 * <bean class="base.Student">
+			 *     <property name="name" value="skywalker"></property>
+			 *     <property name="age" value="12"></property>
+			 *     <qualifier type="org.springframework.beans.factory.annotation.Qualifier" value="student" />
+			 * </bean>
+			 * <bean class="base.Student">
+			 *     <property name="name" value="seaswalker"></property>
+			 *     <property name="age" value="15"></property>
+			 *     <qualifier value="student_2"></qualifier>
+			 * </bean>
+			 * <bean class="base.SimpleBean" />
+			 * SimpleBean部分源码:
+			 *
+			 * @Autowired
+			 * @Qualifier("student")
+			 * private Student student;
+			 * 此标签和@Qualifier, @Autowired两个注解一起使用才有作用。@Autowired注解采用按类型查找的方式进行注入，如果找到多个需要类型的bean便会报错，有了@Qualifier标签就可以再按照此注解指定的名称查找。两者结合相当于实现了按类型+名称注入。type属性可以不指定，因为默认就是那个。qualifier标签可以有attribute子元素，比如:
+			 *
+			 * <qualifier type="org.springframework.beans.factory.annotation.Qualifier" value="student">
+			 *     <attribute key="id" value="1"/>
+			 * </qualifier>
+			 * 貌似是用来在qualifier也区分不开的时候使用。attribute键值对保存在BeanMetadataAttribute对象中。整个qualifier保存在AutowireCandidateQualifier对象中。
+			 */
 			parseQualifierElements(ele, bd);
 
 			bd.setResource(this.readerContext.getResource());
@@ -1383,11 +1471,13 @@ public class BeanDefinitionParserDelegate {
 		if (namespaceUri == null) {
 			return null;
 		}
+		//s NamespaceHandlerResolver由XmlBeanDefinitionReader初始化，是一个DefaultNamespaceHandlerResolver对象，也是NamespaceHandlerResolver接口的唯一实现。
 		NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
 		if (handler == null) {
 			error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", ele);
 			return null;
 		}
+		//s 使用自定义的NamespaceHandler进行解析
 		return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
 	}
 

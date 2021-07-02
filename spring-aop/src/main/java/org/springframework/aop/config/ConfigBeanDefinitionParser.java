@@ -99,22 +99,43 @@ class ConfigBeanDefinitionParser implements BeanDefinitionParser {
 	@Override
 	@Nullable
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
+		/**
+		 *
+		 * <aop:config>
+		 *     <aop:pointcut expression="execution(* exam.service..*.*(..))" id="transaction"/>
+		 *     <aop:advisor advice-ref="txAdvice" pointcut-ref="transaction"/>
+		 *     <aop:aspect ref="" />
+		 * </aop:config>
+		 *
+		 */
+
 		CompositeComponentDefinition compositeDef =
 				new CompositeComponentDefinition(element.getTagName(), parserContext.extractSource(element));
 		parserContext.pushContainingComponent(compositeDef);
 
+		//s 自动代理 注册 AspectJAwareAdvisorAutoProxyCreator BeanDefinition
 		configureAutoProxyCreator(parserContext, element);
 
 		List<Element> childElts = DomUtils.getChildElements(element);
 		for (Element elt: childElts) {
 			String localName = parserContext.getDelegate().getLocalName(elt);
 			if (POINTCUT.equals(localName)) {
+				//s <aop:pointcut expression="execution(* exam.service..*.*(..))" id="transaction"/>
+				//s 创建一个 beanClass为 AspectJExpressionPointcut 的BeanDefinition
 				parsePointcut(elt, parserContext);
 			}
 			else if (ADVISOR.equals(localName)) {
+				//s <aop:advisor advice-ref="txAdvice" pointcut-ref="transaction"/>
+				//s DefaultBeanFactoryPointcutAdvisor
 				parseAdvisor(elt, parserContext);
 			}
 			else if (ASPECT.equals(localName)) {
+				/**
+				 * <aop:aspect ref="aopAdvice">
+				 *  <aop:before method="beforeSend" pointcut-ref="pointcut" />
+				 *  <aop:after method="afterSend" pointcut-ref="pointcut" />
+				 * </aop:aspect>
+				 */
 				parseAspect(elt, parserContext);
 			}
 		}
@@ -196,6 +217,12 @@ class ConfigBeanDefinitionParser implements BeanDefinitionParser {
 	}
 
 	private void parseAspect(Element aspectElement, ParserContext parserContext) {
+		/**
+		 * <aop:aspect ref="aopAdvice">
+		 *  <aop:before method="beforeSend" pointcut-ref="pointcut" />
+		 *  <aop:after method="afterSend" pointcut-ref="pointcut" />
+		 * </aop:aspect>
+		 */
 		String aspectId = aspectElement.getAttribute(ID);
 		String aspectName = aspectElement.getAttribute(REF);
 
@@ -434,6 +461,7 @@ class ConfigBeanDefinitionParser implements BeanDefinitionParser {
 	 * Pointcut with the BeanDefinitionRegistry.
 	 */
 	private AbstractBeanDefinition parsePointcut(Element pointcutElement, ParserContext parserContext) {
+		//s <aop:pointcut expression="execution(* exam.service..*.*(..))" id="transaction"/>
 		String id = pointcutElement.getAttribute(ID);
 		String expression = pointcutElement.getAttribute(EXPRESSION);
 
@@ -441,7 +469,9 @@ class ConfigBeanDefinitionParser implements BeanDefinitionParser {
 
 		try {
 			this.parseState.push(new PointcutEntry(id));
+			//s 创建一个beanClass为AspectJExpressionPointcut 的 BeanDefinition
 			pointcutDefinition = createPointcutDefinition(expression);
+
 			pointcutDefinition.setSource(parserContext.extractSource(pointcutElement));
 
 			String pointcutBeanName = id;

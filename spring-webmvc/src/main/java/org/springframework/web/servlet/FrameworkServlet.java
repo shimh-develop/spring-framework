@@ -524,6 +524,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @see #setContextConfigLocation
 	 */
 	protected WebApplicationContext initWebApplicationContext() {
+		//s 获取根容器 由ContextLoaderListener 加载的
 		WebApplicationContext rootContext =
 				WebApplicationContextUtils.getWebApplicationContext(getServletContext());
 		WebApplicationContext wac = null;
@@ -541,6 +542,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 						// the root application context (if any; may be null) as the parent
 						cwac.setParent(rootContext);
 					}
+					//s refresh 方法
 					configureAndRefreshWebApplicationContext(cwac);
 				}
 			}
@@ -554,6 +556,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		}
 		if (wac == null) {
 			// No context instance is defined for this servlet -> create a local one
+			//s 创建容器 默认XmlWebApplicationContext 并refresh刷新
 			wac = createWebApplicationContext(rootContext);
 		}
 
@@ -562,6 +565,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			// support or the context injected at construction time had already been
 			// refreshed -> trigger initial onRefresh manually here.
 			synchronized (this.onRefreshMonitor) {
+				//s 初始化 MVC 常用的组件等 HandlerMapping、ViewResolver等
 				onRefresh(wac);
 			}
 		}
@@ -965,6 +969,8 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 		long startTime = System.currentTimeMillis();
 		Throwable failureCause = null;
+		//s 将地区(Locale)和请求属性以ThreadLocal的方法与当前线程进行关联，
+		// 分别可以通过LocaleContextHolder和RequestContextHolder进行获取。
 
 		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
 		LocaleContext localeContext = buildLocaleContext(request);
@@ -978,6 +984,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
+			//s 处理
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {
@@ -1008,7 +1015,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 					}
 				}
 			}
-
+			//s 发布事件 ServletRequestHandledEvent
 			publishRequestHandledEvent(request, response, startTime, failureCause);
 		}
 	}

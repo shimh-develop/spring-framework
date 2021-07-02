@@ -39,6 +39,12 @@ public class TransactionTest {
 		 * 	1. 执行TransactionInterceptor的invoke方法
 		 *	@see org.springframework.transaction.interceptor.TransactionInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
 		 *
+		 *
+		 * TransactionInterceptor[transactionAttributeSource] = AnnotationTransactionAttributeSource
+		 *
+		 * BeanFactoryTransactionAttributeSourceAdvisor[transactionAttributeSource] = AnnotationTransactionAttributeSource
+		 * BeanFactoryTransactionAttributeSourceAdvisor[adviceBeanName] = TransactionInterceptor
+		 *
 		 */
 
 

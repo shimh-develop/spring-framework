@@ -112,6 +112,7 @@ class ConstructorResolver {
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
 
 		BeanWrapperImpl bw = new BeanWrapperImpl();
+		//s ConversionService PropertyEditor 属性编辑器 将xml中配置的属性 转换成对象的属性的类型
 		this.beanFactory.initBeanWrapper(bw);
 
 		Constructor<?> constructorToUse = null;
@@ -275,7 +276,22 @@ class ConstructorResolver {
 				argsHolderToUse.storeCache(mbd, constructorToUse);
 			}
 		}
+		/**
+		 * 上面代码：
+		 * 1 确定构造器的参数
+		 * 2 根据参数确定构造器函数
+		 */
 
+		/**
+		 *
+		 * 按指定的实例化策略 实例化bean对象
+		 *
+		 * 默认是CglibSubclassingInstantiationStrategy
+		 *
+		 * 如果有lookup-method 或 replace-method 会创建子类代理对象
+		 * 没有的话就是反射创建对象
+		 *
+		 */
 		try {
 			final InstantiationStrategy strategy = beanFactory.getInstantiationStrategy();
 			Object beanInstance;

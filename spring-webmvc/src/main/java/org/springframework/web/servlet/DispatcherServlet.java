@@ -487,6 +487,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Override
 	protected void onRefresh(ApplicationContext context) {
+		//s MVC初始化
 		initStrategies(context);
 	}
 
@@ -495,14 +496,50 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
+		//s MVC初始化
+		/**
+		 *
+		 * 默认配置的bean
+		 * org/springframework/web/servlet/DispatcherServlet.properties
+		 *
+		 */
+		//s 文件上传 默认不配置
 		initMultipartResolver(context);
+
+		//s 国际化 默认AcceptHeaderLocaleResolver
 		initLocaleResolver(context);
+
 		initThemeResolver(context);
+		//s 解析request请求 返回处理的Handler
+		//s org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping,\
+		//	org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 		initHandlerMappings(context);
+
+		/**
+		 * 适配器 如何调用Handler 可以使用注解@RequestMapping、实现Controller接口等
+		 * org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter,\
+		 * 	org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter,\
+		 * 	org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
+		 *
+		 */
 		initHandlerAdapters(context);
+		/**
+		 * 异常处理
+		 *
+		 * rg.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver,\
+		 * 	org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver,\
+		 * 	org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver
+		 *
+		 */
 		initHandlerExceptionResolvers(context);
+		/**
+		 * Controller方法没有返回View或试图名称时，且没有往response中写数据时，使用它来返回默认的
+		 *org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator
+		 */
 		initRequestToViewNameTranslator(context);
+		//s org.springframework.web.servlet.view.InternalResourceViewResolver
 		initViewResolvers(context);
+
 		initFlashMapManager(context);
 	}
 
@@ -587,6 +624,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			if (!matchingBeans.isEmpty()) {
 				this.handlerMappings = new ArrayList<>(matchingBeans.values());
 				// We keep HandlerMappings in sorted order.
+				//s order 排序
 				AnnotationAwareOrderComparator.sort(this.handlerMappings);
 			}
 		}
@@ -907,6 +945,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		// Make framework objects available to handlers and view objects.
+		//s 往Request中加入一些对象
 		request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, getWebApplicationContext());
 		request.setAttribute(LOCALE_RESOLVER_ATTRIBUTE, this.localeResolver);
 		request.setAttribute(THEME_RESOLVER_ATTRIBUTE, this.themeResolver);
@@ -957,22 +996,34 @@ public class DispatcherServlet extends FrameworkServlet {
 			Exception dispatchException = null;
 
 			try {
+				//s 文件上传
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
+				//s 获取Handler @Controller等
+				/**
+				 * 从这里可以看出，寻找处理器实际上委托给HandlerMapping实现，寻找的过程便是遍历所有的HandlerMapping进行查找，
+				 * 一旦找到，那么不再继续进行遍历。也就是说HandlerMapping之间有优先级的概念，
+				 * 而根据AnnotationDrivenBeanDefinitionParser的注释，RequestMappingHandlerMapping其实有最高的优先级。
+				 *
+				 */
 				mappedHandler = getHandler(processedRequest);
+
 				if (mappedHandler == null) {
+					//s 没有找到 response返回404
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
 				// Determine handler adapter for the current request.
+				//s 适配 第一个适配器是RequestMappingHandlerAdapter，而其support方法直接返回true，这就导致了使用的适配器总是这一个
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
 				String method = request.getMethod();
 				boolean isGet = "GET".equals(method);
+				//s Last-Modified支持
 				if (isGet || "HEAD".equals(method)) {
 					long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
 					if (logger.isDebugEnabled()) {
@@ -982,19 +1033,21 @@ public class DispatcherServlet extends FrameworkServlet {
 						return;
 					}
 				}
-
+				//s 拦截器
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
 				// Actually invoke the handler.
+				//s 执行真正的方法
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
-
+				//s 视图名 提供默认的
 				applyDefaultViewName(processedRequest, mv);
+				//s 拦截器
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -1005,6 +1058,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
+			//s 处理异常 视图渲染 拦截器调用
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
@@ -1059,6 +1113,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			}
 			else {
 				Object handler = (mappedHandler != null ? mappedHandler.getHandler() : null);
+				//s 调用异常处理器处理
 				mv = processHandlerException(request, response, handler, exception);
 				errorView = (mv != null);
 			}
@@ -1066,7 +1121,9 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Did the handler return a view to render?
 		if (mv != null && !mv.wasCleared()) {
+			//s 视图渲染
 			render(mv, request, response);
+			//s 已经将错误渲染了
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);
 			}
@@ -1179,6 +1236,10 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Nullable
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		/**
+		 *
+		 * 从这里可以看出，寻找处理器实际上委托给HandlerMapping实现，寻找的过程便是遍历所有的HandlerMapping进行查找，一旦找到，那么不再继续进行遍历。也就是说HandlerMapping之间有优先级的概念，而根据AnnotationDrivenBeanDefinitionParser的注释，RequestMappingHandlerMapping其实有最高的优先级。
+		 */
 		if (this.handlerMappings != null) {
 			for (HandlerMapping hm : this.handlerMappings) {
 				if (logger.isTraceEnabled()) {
@@ -1273,6 +1334,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Handler execution resulted in exception - forwarding to resolved error view: " + exMv, ex);
 			}
+			//s 暴露错误到Request中
 			WebUtils.exposeErrorRequestAttributes(request, ex, getServletName());
 			return exMv;
 		}

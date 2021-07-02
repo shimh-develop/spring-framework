@@ -184,6 +184,7 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 		Assert.notNull(resources, "Resource array must not be null");
 		int counter = 0;
 		for (Resource resource : resources) {
+			//s 解析xml配置文件 生成BeanDefinition 并注册到BeanFactory中
 			counter += loadBeanDefinitions(resource);
 		}
 		return counter;
@@ -191,6 +192,7 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 
 	@Override
 	public int loadBeanDefinitions(String location) throws BeanDefinitionStoreException {
+		//s 解析xml配置文件 生成BeanDefinition 并注册到BeanFactory中
 		return loadBeanDefinitions(location, null);
 	}
 
@@ -239,6 +241,7 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 		else {
 			// Can only load single resources by absolute URL.
 			Resource resource = resourceLoader.getResource(location);
+			//s 解析xml配置文件 生成BeanDefinition 并注册到BeanFactory中
 			int loadCount = loadBeanDefinitions(resource);
 			if (actualResources != null) {
 				actualResources.add(resource);

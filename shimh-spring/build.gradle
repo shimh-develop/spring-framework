@@ -20,6 +20,8 @@ dependencies {
     compile(project(":spring-aspects"))
     compile(project(":spring-jdbc"))
     compile(project(":spring-tx"))
+    compile(project(":spring-web"))
+    compile(project(":spring-webmvc"))
 //    optional("org.aspectj:aspectjweaver:${aspectjVersion}")
 //    optional("org.apache.commons:commons-pool2:2.5.0")
 }

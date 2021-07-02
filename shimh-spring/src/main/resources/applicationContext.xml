@@ -11,4 +11,13 @@
 
 	<bean id="dog" class="ioc.Dog" p:name="tom" p:age="4"/>
 
+	<bean id="a" class="ioc.A">
+		<constructor-arg name="b" ref="b"></constructor-arg>
+	</bean>
+
+	<bean id="b" class="ioc.B">
+		<constructor-arg name="a" ref="a"></constructor-arg>
+	</bean>
+
+
 </beans>

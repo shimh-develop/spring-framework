@@ -279,17 +279,20 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			final InvocationCallback invocation) throws Throwable {
 
 		// If the transaction attribute is null, the method is non-transactional.
+		//s 这里是 AnnotationTransactionAttributeSource 声明式事务会注册该bean
 		TransactionAttributeSource tas = getTransactionAttributeSource();
-		//s 获取对应事务的属性
+		//s 获取对应事务的属性 RuleBasedTransactionAttribute 就是解析的方法、实现类、接口方法、接口类上的@Transactionl注解
 		final TransactionAttribute txAttr = (tas != null ? tas.getTransactionAttribute(method, targetClass) : null);
-		//s 获取BeanFactory中的 transactionManager 事务管理器
+		//s 先从@Transactionl获取，没有获取BeanFactory中的 transactionManager 事务管理器
 		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
+
 		//s 构造当前方法唯一标识（类 方法，如 service.UserServiceImpl.save)
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
 
 		//s 声明式事务处理
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
 			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+
 			//s 创建 TransactionInfo 也是创建事务的过程
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 
